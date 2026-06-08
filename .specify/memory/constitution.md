@@ -1,50 +1,43 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+Version change: unset → 1.0.0
+Added principles: Training Integrity, Spec-Driven Development, Security Discipline, Offline-First Simplicity, Documentation & Review
+Added sections: Additional Constraints, Development Workflow
+Templates reviewed: .specify/templates/plan-template.md (✅ no change needed), .specify/templates/spec-template.md (✅ no change needed), .specify/templates/tasks-template.md (✅ no change needed)
+Follow-up TODOs: none
+-->
+
+# ContosoDashboard Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Training Integrity
+All design decisions and implementation guides MUST be shaped by the repository’s training purpose. Every code change, document update, and example MUST preserve educational clarity and avoid production-only assumptions.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Spec-Driven Development
+All feature work MUST begin with explicit plans, documented specifications, and task-level decomposition. Code MUST be implemented only after user scenarios, acceptance criteria, and test intentions are defined.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Security Discipline
+Security is a first-class requirement for this training application. Authorization, IDOR protection, and service-level access checks MUST be enforced before any feature is accepted.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Offline-First Simplicity
+The repository MUST favor local, self-contained implementations that work without external services. Complexity is only acceptable when it directly supports training goals or a clear migration path to production-ready alternatives.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Documentation & Review
+Every change MUST include clearly written guidance, update documentation, and subject itself to review. Pull requests MUST explain the problem, the design decision, and any trade-offs made.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Additional Constraints
+Technology and implementation choices MUST align with the project’s training context: ASP.NET Core 8.0, Blazor Server, Entity Framework Core, and local SQL Server LocalDB. External cloud services MUST be avoided unless they are explicitly represented as a documented production migration path.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow
+Work MUST follow feature branches, incremental delivery, and explicit review. Each feature branch MUST include a linked spec and task plan, and every pull request MUST verify that tests, documentation, and security checks are complete.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+This constitution supersedes informal habits and local preferences for this repository. All development work MUST comply with the principles above.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- Amendments MUST be made through documented changes in this file and reviewed in a pull request.
+- Version updates MUST reflect meaningful governance or policy changes.
+- Compliance reviews MUST be part of every feature evaluation and PR checklist.
+- Any deviation from these principles MUST be justified in the PR description and approved by a reviewer.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-06-08 | **Last Amended**: 2026-06-08
