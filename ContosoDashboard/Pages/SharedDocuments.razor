@@ -1,0 +1,82 @@
+@page "/shared-documents"
+@using ContosoDashboard.Models
+@using ContosoDashboard.Services
+@using System.Security.Claims
+@attribute [Authorize]
+@inject IDocumentService DocumentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Shared Documents - ContosoDashboard</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Shared Documents</h1>
+            <p class="text-muted">Browse documents shared with you or available via your projects.</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label class="form-label">Search</label>
+            <input class="form-control" @bind="Filter.Query" placeholder="Search title, description, or tags" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Category</label>
+            <input class="form-control" @bind="Filter.Category" placeholder="Category" />
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+            <button class="btn btn-primary w-100" @onclick="SearchDocuments">Search</button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger">@ErrorMessage</div>
+    }
+
+    <DocumentList Documents="Documents" />
+</div>
+
+@code {
+    private int currentUserId = 0;
+    private List<Document> Documents = new();
+    private DocumentSearchFilter Filter = new();
+    private string ErrorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+        {
+            currentUserId = userId;
+        }
+
+        if (currentUserId > 0)
+        {
+            await LoadDocuments();
+        }
+    }
+
+    private async Task LoadDocuments()
+    {
+        Documents = await DocumentService.GetSharedDocumentsForUserAsync(currentUserId);
+    }
+
+    private async Task SearchDocuments()
+    {
+        ErrorMessage = string.Empty;
+
+        try
+        {
+            var result = await DocumentService.SearchDocumentsAsync(Filter, currentUserId);
+            Documents = result.Documents;
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+}

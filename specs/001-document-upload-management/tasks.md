@@ -7,11 +7,11 @@
 
 **Purpose**: Project initialization and shared document storage infrastructure
 
-- [ ] T001 [P] Add `ContosoDashboard/Models/Document.cs` and `ContosoDashboard/Models/DocumentTag.cs`
-- [ ] T002 Update `ContosoDashboard/Data/ApplicationDbContext.cs` with new `DbSet<Document>`, `DbSet<DocumentTag>`, `DbSet<DocumentShare>`, `DbSet<DocumentActivity>`, and `DbSet<TaskDocument>` properties
-- [ ] T003 [P] Add `ContosoDashboard/Services/IFileStorageService.cs` and `ContosoDashboard/Services/LocalFileStorageService.cs`
-- [ ] T004 Update `ContosoDashboard/Program.cs` to register `IFileStorageService` and configure secure local storage directory outside `wwwroot`
-- [ ] T005 [P] Add `ContosoDashboard/Models/DocumentShare.cs`, `ContosoDashboard/Models/DocumentActivity.cs`, and `ContosoDashboard/Models/TaskDocument.cs`
+- [x] T001 [P] Add `ContosoDashboard/Models/Document.cs` and `ContosoDashboard/Models/DocumentTag.cs`
+ - [x] T002 Update `ContosoDashboard/Data/ApplicationDbContext.cs` with new `DbSet<Document>`, `DbSet<DocumentTag>`, `DbSet<DocumentShare>`, `DbSet<DocumentActivity>`, and `DbSet<TaskDocument>` properties
+ - [x] T003 [P] Add `ContosoDashboard/Services/IFileStorageService.cs` and `ContosoDashboard/Services/LocalFileStorageService.cs`
+ - [x] T004 Update `ContosoDashboard/Program.cs` to register `IFileStorageService` and configure secure local storage directory outside `wwwroot`
+ - [x] T005 [P] Add `ContosoDashboard/Models/DocumentShare.cs`, `ContosoDashboard/Models/DocumentActivity.cs`, and `ContosoDashboard/Models/TaskDocument.cs`
 
 ---
 
@@ -19,13 +19,13 @@
 
 **Purpose**: Core document service, storage abstraction, and secure access support
 
-- [ ] T006 Implement `ContosoDashboard/Services/IDocumentService.cs` to match `IDocumentService` contract
-- [ ] T007 Implement `ContosoDashboard/Services/DocumentService.cs` with upload, metadata update, replace, delete, and authorization skeletons
-- [ ] T008 [P] Implement secure download and preview support in `ContosoDashboard/Services/LocalFileStorageService.cs` and add helper methods for `DownloadAsync` and `GetDownloadUrlAsync`
-- [ ] T009 Add application configuration support for document storage paths in `appsettings.json` and `appsettings.Development.json`
-- [ ] T010 Implement audit logging support in `ContosoDashboard/Services/DocumentService.cs` using `DocumentActivity` records
-- [ ] T011 [P] Add shared document retrieval and project document query methods to `DocumentService` in `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T012 Add authorization checks in `ContosoDashboard/Services/DocumentService.cs` to enforce project membership, ownership, and explicit sharing
+ - [x] T006 Implement `ContosoDashboard/Services/IDocumentService.cs` to match `IDocumentService` contract
+ - [x] T007 Implement `ContosoDashboard/Services/DocumentService.cs` with upload, metadata update, replace, delete, and authorization skeletons
+ - [x] T008 [P] Implement secure download and preview support in `ContosoDashboard/Services/LocalFileStorageService.cs` and add helper methods for `DownloadAsync` and `GetDownloadUrlAsync`
+ - [x] T009 Add application configuration support for document storage paths in `appsettings.json` and `appsettings.Development.json`
+ - [x] T010 Implement audit logging support in `ContosoDashboard/Services/DocumentService.cs` using `DocumentActivity` records
+ - [x] T011 [P] Add shared document retrieval and project document query methods to `DocumentService` in `ContosoDashboard/Services/DocumentService.cs`
+ - [x] T012 Add authorization checks in `ContosoDashboard/Services/DocumentService.cs` to enforce project membership, ownership, and explicit sharing
 
 ---
 
@@ -37,13 +37,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T013 [P] [US1] Add `ContosoDashboard/Pages/Documents.razor` to support personal document upload, metadata entry, personal document listing, and actions
-- [ ] T014 [P] [US1] Add `ContosoDashboard/Shared/DocumentList.razor` component for document list display with title, category, upload date, file size, project association, and action buttons
-- [ ] T015 [US1] Add `ContosoDashboard/Shared/DocumentMetadataEditor.razor` for title, description, category, and tag editing
-- [ ] T016 [US1] Implement `DocumentService.GetDocumentsForUserAsync`, `UploadDocumentAsync`, `UpdateDocumentMetadataAsync`, `ReplaceDocumentFileAsync`, `DeleteDocumentAsync`, and `GetDocumentByIdAsync` in `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T017 [US1] Add file type and size validation for PDF, Office, text, JPEG, and PNG in `ContosoDashboard/Services/DocumentService.cs` and `ContosoDashboard/Pages/Documents.razor`
-- [ ] T018 [US1] Add delete confirmation, success/error notification flow, and owner-only edit/delete enforcement in `ContosoDashboard/Pages/Documents.razor`
-- [ ] T019 [US1] Add personal document sorting by title, upload date, category, and file size in `ContosoDashboard/Pages/Documents.razor`
+- [x] T013 [P] [US1] Add `ContosoDashboard/Pages/Documents.razor` to support personal document upload, metadata entry, personal document listing, and actions
+- [x] T014 [P] [US1] Add `ContosoDashboard/Shared/DocumentList.razor` component for document list display with title, category, upload date, file size, project association, and action buttons
+- [x] T015 [US1] Add `ContosoDashboard/Shared/DocumentMetadataEditor.razor` for title, description, category, and tag editing
+- [x] T016 [US1] Implement `DocumentService.GetDocumentsForUserAsync`, `UploadDocumentAsync`, `UpdateDocumentMetadataAsync`, `ReplaceDocumentFileAsync`, `DeleteDocumentAsync`, and `GetDocumentByIdAsync` in `ContosoDashboard/Services/DocumentService.cs`
+- [x] T017 [US1] Add file type and size validation for PDF, Office, text, JPEG, and PNG in `ContosoDashboard/Services/DocumentService.cs` and `ContosoDashboard/Pages/Documents.razor`
+- [x] T018 [US1] Add delete confirmation, success/error notification flow, and owner-only edit/delete enforcement in `ContosoDashboard/Pages/Documents.razor`
+- [x] T019 [US1] Add personal document sorting by title, upload date, category, and file size in `ContosoDashboard/Pages/Documents.razor`
 
 ---
 
@@ -55,12 +55,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Add `ContosoDashboard/Pages/SharedDocuments.razor` for shared documents visible to the current user
-- [ ] T021 [US2] Update `ContosoDashboard/Pages/ProjectDetails.razor` to include a project documents section and upload support for project members
-- [ ] T022 [US2] Implement `DocumentService.GetDocumentsForProjectAsync`, `DocumentService.GetSharedDocumentsForUserAsync`, and `DocumentService.SearchDocumentsAsync` in `ContosoDashboard/Services/DocumentService.cs`
+- [x] T020 [P] [US2] Add `ContosoDashboard/Pages/SharedDocuments.razor` for shared documents visible to the current user
+- [x] T021 [US2] Update `ContosoDashboard/Pages/ProjectDetails.razor` to include a project documents section and upload support for project members
+- [x] T022 [US2] Implement `DocumentService.GetDocumentsForProjectAsync`, `DocumentService.GetSharedDocumentsForUserAsync`, and `DocumentService.SearchDocumentsAsync` in `ContosoDashboard/Services/DocumentService.cs`
 - [ ] T023 [US2] Add project document filtering and search UI in `ContosoDashboard/Pages/ProjectDetails.razor` and `ContosoDashboard/Pages/SharedDocuments.razor`
-- [ ] T024 [US2] Add preview and download actions for authorized documents in `ContosoDashboard/Pages/ProjectDetails.razor` and `ContosoDashboard/Pages/SharedDocuments.razor`
-- [ ] T025 [US2] Add access enforcement so only project team members or explicitly shared users can see project documents in `ContosoDashboard/Services/DocumentService.cs`
+- [x] T024 [US2] Add preview and download actions for authorized documents in `ContosoDashboard/Pages/ProjectDetails.razor` and `ContosoDashboard/Pages/SharedDocuments.razor`
+- [x] T025 [US2] Add access enforcement so only project team members or explicitly shared users can see project documents in `ContosoDashboard/Services/DocumentService.cs`
 
 ---
 
@@ -72,10 +72,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] Implement `DocumentService.ShareDocumentAsync` and `DocumentService.AttachDocumentToTaskAsync` in `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T027 [US3] Add share request handling for explicit user shares and project-level shares in `ContosoDashboard/Services/DocumentService.cs`
-- [ ] T028 [US3] Add `ContosoDashboard/Pages/DocumentDetails.razor` to view document metadata, share documents, and attach documents to tasks
-- [ ] T029 [US3] Update `ContosoDashboard/Pages/Tasks.razor` to support selecting and attaching an existing document to a task
+- [x] T026 [US3] Implement `DocumentService.ShareDocumentAsync` and `DocumentService.AttachDocumentToTaskAsync` in `ContosoDashboard/Services/DocumentService.cs`
+- [x] T027 [US3] Add share request handling for explicit user shares and project-level shares in `ContosoDashboard/Services/DocumentService.cs`
+- [x] T028 [US3] Add `ContosoDashboard/Pages/DocumentDetails.razor` to view document metadata, share documents, and attach documents to tasks
+- [x] T029 [US3] Update `ContosoDashboard/Pages/Tasks.razor` to support selecting and attaching an existing document to a task
 - [ ] T030 [US3] Add in-app notifications for shared documents in `ContosoDashboard/Services/NotificationService.cs` or `ContosoDashboard/Services/DocumentService.cs`
 - [ ] T031 [US3] Add `DocumentShare` persistence and task attachment persistence for auditability in `ContosoDashboard/Services/DocumentService.cs`
 - [ ] T032 [US3] Add access revocation behavior so deleted documents remove shared access immediately in `ContosoDashboard/Services/DocumentService.cs`

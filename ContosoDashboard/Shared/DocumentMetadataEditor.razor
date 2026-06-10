@@ -1,0 +1,71 @@
+@using ContosoDashboard.Models
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Edit document metadata</h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input class="form-control" @bind="Title" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Category</label>
+            <input class="form-control" @bind="Category" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" rows="3" @bind="Description"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Tags (comma separated)</label>
+            <input class="form-control" @bind="TagsText" placeholder="e.g. strategy, compliance" />
+        </div>
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-secondary me-2" @onclick="Cancel">Cancel</button>
+            <button class="btn btn-primary" @onclick="Save">Save</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Document Document { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<DocumentMetadataUpdate> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private string Title = string.Empty;
+    private string Description = string.Empty;
+    private string Category = string.Empty;
+    private string TagsText = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        if (Document != null)
+        {
+            Title = Document.Title;
+            Description = Document.Description ?? string.Empty;
+            Category = Document.Category;
+            TagsText = string.Join(", ", Document.DocumentTags.Select(t => t.Tag));
+        }
+    }
+
+    private Task Save()
+    {
+        var update = new DocumentMetadataUpdate
+        {
+            Title = Title,
+            Description = string.IsNullOrWhiteSpace(Description) ? null : Description,
+            Category = Category,
+            Tags = TagsText.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+        };
+
+        return OnSave.InvokeAsync(update);
+    }
+
+    private Task Cancel() => OnCancel.InvokeAsync();
+}

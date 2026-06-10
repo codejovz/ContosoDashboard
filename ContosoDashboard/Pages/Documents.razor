@@ -1,0 +1,335 @@
+@page "/documents"
+@using ContosoDashboard.Models
+@using ContosoDashboard.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Security.Claims
+@attribute [Authorize]
+@inject IDocumentService DocumentService
+@inject IProjectService ProjectService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+
+<PageTitle>My Documents - ContosoDashboard</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>My Documents</h1>
+            <p class="text-muted">Upload, manage, replace, and delete your personal documents.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Message))
+    {
+        <div class="alert alert-success">@Message</div>
+    }
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger">@ErrorMessage</div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Upload New Document</h5>
+        </div>
+        <div class="card-body">
+            <div class="row gy-3">
+                <div class="col-md-6">
+                    <label class="form-label">Title</label>
+                    <input class="form-control" @bind="UploadModel.Title" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Category</label>
+                    <input class="form-control" @bind="UploadModel.Category" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Project</label>
+                    <select class="form-select" @bind="UploadModel.ProjectId">
+                        <option value="">Personal Document</option>
+                        @foreach (var project in Projects)
+                        {
+                            <option value="@project.ProjectId">@project.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Tags</label>
+                    <input class="form-control" @bind="UploadModel.TagsText" placeholder="comma separated" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" rows="3" @bind="UploadModel.Description"></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">File</label>
+                    <InputFile OnChange="OnFileSelected" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.png,.jpg,.jpeg" />
+                    @if (SelectedFile != null)
+                    {
+                        <div class="form-text">Selected: @SelectedFile.Name (@SelectedFile.Size / 1024) KB</div>
+                    }
+                </div>
+                <div class="col-md-6 align-self-end text-end">
+                    <button class="btn btn-primary" @onclick="UploadDocument">Upload Document</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label class="form-label">Sort By</label>
+            <select class="form-select" @bind="SortBy" @onchange="_ => SortDocuments()">
+                <option value="UploadDate">Upload Date</option>
+                <option value="Title">Title</option>
+                <option value="Category">Category</option>
+                <option value="FileSize">File Size</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <DocumentList Documents="Documents" OnEdit="EditMetadata" OnReplace="BeginReplace" OnDelete="DeleteDocument" />
+        </div>
+        <div class="col-lg-4">
+            @if (EditingDocument != null)
+            {
+                <DocumentMetadataEditor Document="EditingDocument" OnSave="SaveMetadata" OnCancel="CancelEdit" />
+            }
+            @if (ReplacingDocument != null)
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Replace Document File</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">File</label>
+                            <InputFile OnChange="OnReplaceFileSelected" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.png,.jpg,.jpeg" />
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-secondary" @onclick="CancelReplace">Cancel</button>
+                            <button class="btn btn-primary" @onclick="ReplaceFile">Replace</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private int currentUserId = 0;
+    private List<Document> Documents = new();
+    private List<Project> Projects = new();
+    private DocumentUploadForm UploadModel = new();
+    private IBrowserFile? SelectedFile;
+    private Document? EditingDocument;
+    private Document? ReplacingDocument;
+    private IBrowserFile? ReplaceFile;
+    private string Message = string.Empty;
+    private string ErrorMessage = string.Empty;
+    private string SortBy = "UploadDate";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+        {
+            currentUserId = userId;
+        }
+
+        if (currentUserId > 0)
+        {
+            await LoadDocuments();
+            Projects = await ProjectService.GetUserProjectsAsync(currentUserId);
+        }
+    }
+
+    private async Task LoadDocuments()
+    {
+        Documents = await DocumentService.GetDocumentsForUserAsync(currentUserId);
+        SortDocuments();
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        SelectedFile = e.File;
+        ErrorMessage = string.Empty;
+    }
+
+    private async Task UploadDocument()
+    {
+        Message = string.Empty;
+        ErrorMessage = string.Empty;
+
+        if (SelectedFile == null)
+        {
+            ErrorMessage = "Please select a file to upload.";
+            return;
+        }
+
+        if (SelectedFile.Size > 25 * 1024 * 1024)
+        {
+            ErrorMessage = "File size must be 25 MB or less.";
+            return;
+        }
+
+        var extension = Path.GetExtension(SelectedFile.Name);
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            ErrorMessage = "Unsupported file type.";
+            return;
+        }
+
+        UploadModel.Tags = UploadModel.TagsText.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+        try
+        {
+            await using var stream = SelectedFile.OpenReadStream(25 * 1024 * 1024);
+            var request = new DocumentUploadRequest
+            {
+                Title = UploadModel.Title,
+                Description = UploadModel.Description,
+                Category = UploadModel.Category,
+                ProjectId = UploadModel.ProjectId,
+                Tags = UploadModel.Tags,
+                OriginalFileName = SelectedFile.Name
+            };
+
+            await DocumentService.UploadDocumentAsync(request, stream, currentUserId);
+            Message = "Document uploaded successfully.";
+            SelectedFile = null;
+            UploadModel = new DocumentUploadForm();
+            await LoadDocuments();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private void EditMetadata(Document document)
+    {
+        EditingDocument = document;
+        ReplacingDocument = null;
+        ErrorMessage = string.Empty;
+        Message = string.Empty;
+    }
+
+    private async Task SaveMetadata(DocumentMetadataUpdate update)
+    {
+        if (EditingDocument == null)
+        {
+            return;
+        }
+
+        var success = await DocumentService.UpdateDocumentMetadataAsync(EditingDocument.DocumentId, update, currentUserId);
+        if (success)
+        {
+            Message = "Metadata updated successfully.";
+            EditingDocument = null;
+            await LoadDocuments();
+        }
+        else
+        {
+            ErrorMessage = "Unable to update document metadata.";
+        }
+    }
+
+    private void CancelEdit()
+    {
+        EditingDocument = null;
+    }
+
+    private void BeginReplace(Document document)
+    {
+        ReplacingDocument = document;
+        EditingDocument = null;
+        ReplaceFile = null;
+    }
+
+    private async Task OnReplaceFileSelected(InputFileChangeEventArgs args)
+    {
+        ReplaceFile = args.File;
+    }
+
+    private async Task ReplaceFile()
+    {
+        if (ReplacingDocument == null || ReplaceFile == null)
+        {
+            ErrorMessage = "Please select a file to replace.";
+            return;
+        }
+
+        try
+        {
+            await using var stream = ReplaceFile.OpenReadStream(25 * 1024 * 1024);
+            var success = await DocumentService.ReplaceDocumentFileAsync(ReplacingDocument.DocumentId, stream, ReplaceFile.Name, currentUserId);
+            if (success)
+            {
+                Message = "Document file replaced successfully.";
+                ReplacingDocument = null;
+                ReplaceFile = null;
+                await LoadDocuments();
+            }
+            else
+            {
+                ErrorMessage = "Unable to replace document file.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+    }
+
+    private void CancelReplace()
+    {
+        ReplacingDocument = null;
+        ReplaceFile = null;
+    }
+
+    private async Task DeleteDocument(Document document)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete '{document.Title}'? This action cannot be undone.");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        var success = await DocumentService.DeleteDocumentAsync(document.DocumentId, currentUserId);
+        if (success)
+        {
+            Message = "Document deleted successfully.";
+            await LoadDocuments();
+        }
+        else
+        {
+            ErrorMessage = "Unable to delete document.";
+        }
+    }
+
+    private void SortDocuments()
+    {
+        Documents = SortBy switch
+        {
+            "Title" => Documents.OrderBy(d => d.Title).ToList(),
+            "Category" => Documents.OrderBy(d => d.Category).ToList(),
+            "FileSize" => Documents.OrderBy(d => d.FileSize).ToList(),
+            _ => Documents.OrderByDescending(d => d.UploadDate).ToList(),
+        };
+    }
+
+    public class DocumentUploadForm
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public int? ProjectId { get; set; }
+        public string TagsText { get; set; } = string.Empty;
+        public List<string> Tags { get; set; } = new();
+    }
+}
