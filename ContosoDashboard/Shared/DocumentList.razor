@@ -1,0 +1,77 @@
+@using ContosoDashboard.Models
+
+@if (Documents == null || !Documents.Any())
+{
+    <div class="alert alert-secondary">No documents available.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Uploaded</th>
+                    <th>Size</th>
+                    <th>Project</th>
+                    <th>Tags</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var document in Documents)
+                {
+                    <tr>
+                        <td>
+                            <strong>@document.Title</strong>
+                            <div class="text-muted small">@document.OriginalFileName</div>
+                        </td>
+                        <td>@document.Category</td>
+                        <td>@document.UploadDate.ToString("MMM dd, yyyy")</td>
+                        <td>@(document.FileSize / 1024) KB</td>
+                        <td>@(document.Project?.Name ?? "Personal")</td>
+                        <td>@string.Join(", ", document.DocumentTags.Select(t => t.Tag))</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary me-1" href="@document.DownloadUrl" target="_blank" rel="noreferrer">
+                                <i class="bi bi-download"></i>
+                            </a>
+                            @if (OnEdit.HasDelegate)
+                            {
+                                <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => OnEdit.InvokeAsync(document)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            }
+                            @if (OnReplace.HasDelegate)
+                            {
+                                <button class="btn btn-sm btn-outline-info me-1" @onclick="() => OnReplace.InvokeAsync(document)">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                            }
+                            @if (OnDelete.HasDelegate)
+                            {
+                                <button class="btn btn-sm btn-outline-danger" @onclick="() => OnDelete.InvokeAsync(document)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public IEnumerable<Document>? Documents { get; set; }
+
+    [Parameter]
+    public EventCallback<Document> OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback<Document> OnReplace { get; set; }
+
+    [Parameter]
+    public EventCallback<Document> OnDelete { get; set; }
+}

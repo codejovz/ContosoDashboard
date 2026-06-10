@@ -5,6 +5,7 @@
 @using System.Security.Claims
 @attribute [Authorize]
 @inject IProjectService ProjectService
+@inject IDocumentService DocumentService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -227,6 +228,58 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Project Documents</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(ProjectError))
+                        {
+                            <div class="alert alert-danger">@ProjectError</div>
+                        }
+                        @if (!string.IsNullOrEmpty(ProjectMessage))
+                        {
+                            <div class="alert alert-success">@ProjectMessage</div>
+                        }
+                        @if (CanUploadProjectDocuments())
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Title</label>
+                                <input class="form-control" @bind="ProjectUploadTitle" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <input class="form-control" @bind="ProjectUploadCategory" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tags</label>
+                                <input class="form-control" @bind="ProjectUploadTags" placeholder="comma separated" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">File</label>
+                                <InputFile OnChange="OnProjectFileSelected" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.png,.jpg,.jpeg" />
+                            </div>
+                            <div class="mb-3 text-end">
+                                <button class="btn btn-primary" @onclick="UploadProjectDocument">Upload to Project</button>
+                            </div>
+                            <hr />
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">You must be a project manager or member to upload project documents.</div>
+                        }
+
+                        @if (!ProjectDocuments.Any())
+                        {
+                            <div class="text-muted">No project documents found.</div>
+                        }
+                        else
+                        {
+                            <DocumentList Documents="ProjectDocuments" />
+                        }
+                    </div>
+                </div>
             </div>
         </div>
     }
@@ -238,6 +291,14 @@
 
     private Project? project;
     private int currentUserId = 0;
+    private List<Document> ProjectDocuments = new();
+    private string ProjectUploadTitle = string.Empty;
+    private string ProjectUploadCategory = string.Empty;
+    private string? ProjectUploadDescription;
+    private string ProjectUploadTags = string.Empty;
+    private IBrowserFile? ProjectSelectedFile;
+    private string ProjectMessage = string.Empty;
+    private string ProjectError = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -253,6 +314,10 @@
         if (currentUserId > 0)
         {
             project = await ProjectService.GetProjectByIdAsync(ProjectId, currentUserId);
+            if (project != null)
+            {
+                await LoadProjectDocuments();
+            }
         }
         
         if (project == null)
@@ -294,6 +359,71 @@
             TaskPriority.Critical => "danger",
             _ => "secondary"
         };
+    }
+
+    private async Task LoadProjectDocuments()
+    {
+        if (project != null)
+        {
+            ProjectDocuments = await DocumentService.GetDocumentsForProjectAsync(project.ProjectId, currentUserId);
+        }
+    }
+
+    private bool CanUploadProjectDocuments()
+    {
+        return project != null && (project.ProjectManagerId == currentUserId || project.ProjectMembers.Any(pm => pm.UserId == currentUserId));
+    }
+
+    private async Task OnProjectFileSelected(InputFileChangeEventArgs e)
+    {
+        ProjectSelectedFile = e.File;
+        ProjectError = string.Empty;
+        ProjectMessage = string.Empty;
+    }
+
+    private async Task UploadProjectDocument()
+    {
+        ProjectError = string.Empty;
+        ProjectMessage = string.Empty;
+
+        if (project == null || ProjectSelectedFile == null)
+        {
+            ProjectError = "Select a file to upload.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(ProjectUploadTitle) || string.IsNullOrWhiteSpace(ProjectUploadCategory))
+        {
+            ProjectError = "Project document title and category are required.";
+            return;
+        }
+
+        try
+        {
+            await using var stream = ProjectSelectedFile.OpenReadStream(25 * 1024 * 1024);
+            var request = new DocumentUploadRequest
+            {
+                Title = ProjectUploadTitle,
+                Description = ProjectUploadDescription,
+                Category = ProjectUploadCategory,
+                ProjectId = project.ProjectId,
+                Tags = ProjectUploadTags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList(),
+                OriginalFileName = ProjectSelectedFile.Name
+            };
+
+            await DocumentService.UploadDocumentAsync(request, stream, currentUserId);
+            ProjectMessage = "Project document uploaded successfully.";
+            ProjectUploadTitle = string.Empty;
+            ProjectUploadCategory = string.Empty;
+            ProjectUploadDescription = string.Empty;
+            ProjectUploadTags = string.Empty;
+            ProjectSelectedFile = null;
+            await LoadProjectDocuments();
+        }
+        catch (Exception ex)
+        {
+            ProjectError = ex.Message;
+        }
     }
 
     private string GetInitials(string displayName)

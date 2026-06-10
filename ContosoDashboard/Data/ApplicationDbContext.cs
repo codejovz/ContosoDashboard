@@ -17,6 +17,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<ProjectMember> ProjectMembers { get; set; } = null!;
     public DbSet<Announcement> Announcements { get; set; } = null!;
+    public DbSet<Document> Documents { get; set; } = null!;
+    public DbSet<DocumentTag> DocumentTags { get; set; } = null!;
+    public DbSet<DocumentShare> DocumentShares { get; set; } = null!;
+    public DbSet<DocumentActivity> DocumentActivities { get; set; } = null!;
+    public DbSet<TaskDocument> TaskDocuments { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,6 +68,45 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
+
+        modelBuilder.Entity<Document>()
+            .HasMany(d => d.DocumentTags)
+            .WithOne(t => t.Document)
+            .HasForeignKey(t => t.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Document>()
+            .HasMany(d => d.Shares)
+            .WithOne(s => s.Document)
+            .HasForeignKey(s => s.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Document>()
+            .HasMany(d => d.Activities)
+            .WithOne(a => a.Document)
+            .HasForeignKey(a => a.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Document>()
+            .HasMany(d => d.TaskDocuments)
+            .WithOne(td => td.Document)
+            .HasForeignKey(td => td.DocumentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TaskItem>()
+            .HasMany(t => t.TaskDocuments)
+            .WithOne(td => td.Task)
+            .HasForeignKey(td => td.TaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DocumentTag>()
+            .HasIndex(t => t.Tag);
+
+        modelBuilder.Entity<DocumentShare>()
+            .HasIndex(s => s.SharedWithUserId);
+
+        modelBuilder.Entity<DocumentActivity>()
+            .HasIndex(a => new { a.UserId, a.ActivityDate });
 
         // Seed initial data
         SeedData(modelBuilder);

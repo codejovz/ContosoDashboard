@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using ContosoDashboard.Data;
 using ContosoDashboard.Services;
@@ -43,6 +44,8 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 
 // Add HttpContextAccessor for accessing user claims
 builder.Services.AddHttpContextAccessor();
@@ -104,6 +107,35 @@ app.UseRouting();
 // Enable authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapGet("/documents/download/{documentId:int}", async (int documentId, IDocumentService documentService, HttpContext context) =>
+{
+    var user = context.User;
+    if (user?.Identity?.IsAuthenticated != true)
+    {
+        return Results.Unauthorized();
+    }
+
+    var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    var document = await documentService.GetDocumentByIdAsync(documentId, userId);
+    if (document == null)
+    {
+        return Results.NotFound();
+    }
+
+    var stream = await documentService.DownloadDocumentAsync(documentId, userId);
+    if (stream == null)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.File(stream, document.FileType ?? "application/octet-stream", document.OriginalFileName);
+});
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

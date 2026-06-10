@@ -5,6 +5,7 @@
 @using System.Security.Claims
 @attribute [Authorize]
 @inject ITaskService TaskService
+@inject IDocumentService DocumentService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>My Tasks - ContosoDashboard</PageTitle>
@@ -133,6 +134,36 @@
             </table>
         </div>
     }
+
+    @if (SelectedTaskIdForAttachment > 0)
+    {
+        <div class="card mt-4">
+            <div class="card-header">
+                Attach Document to Task
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(AttachError))
+                {
+                    <div class="alert alert-danger">@AttachError</div>
+                }
+                @if (!string.IsNullOrEmpty(AttachMessage))
+                {
+                    <div class="alert alert-success">@AttachMessage</div>
+                }
+                <div class="mb-3">
+                    <label class="form-label">Document</label>
+                    <select class="form-select" @bind="SelectedDocumentIdForAttachment">
+                        <option value="0">Select a document</option>
+                        @foreach (var doc in AvailableDocuments)
+                        {
+                            <option value="@doc.DocumentId">@doc.Title (@doc.Category)</option>
+                        }
+                    </select>
+                </div>
+                <button class="btn btn-success" @onclick="AttachDocumentToTask">Attach Document</button>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
@@ -140,6 +171,11 @@
     private string filterStatus = "";
     private string filterPriority = "";
     private int currentUserId = 0;
+    private List<Document> AvailableDocuments = new();
+    private int SelectedTaskIdForAttachment = 0;
+    private int SelectedDocumentIdForAttachment = 0;
+    private string AttachMessage = string.Empty;
+    private string AttachError = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -188,6 +224,40 @@
     private void ViewTaskDetails(int taskId)
     {
         // TODO: Navigate to task details or show modal
+    }
+
+    private async Task PrepareAttachment(int taskId)
+    {
+        SelectedTaskIdForAttachment = taskId;
+        SelectedDocumentIdForAttachment = 0;
+        AttachMessage = string.Empty;
+        AttachError = string.Empty;
+        AvailableDocuments = await DocumentService.GetSharedDocumentsForUserAsync(currentUserId);
+    }
+
+    private async Task AttachDocumentToTask()
+    {
+        AttachMessage = string.Empty;
+        AttachError = string.Empty;
+
+        if (SelectedTaskIdForAttachment == 0 || SelectedDocumentIdForAttachment == 0)
+        {
+            AttachError = "Select a task and document to attach.";
+            return;
+        }
+
+        var success = await DocumentService.AttachDocumentToTaskAsync(SelectedDocumentIdForAttachment, SelectedTaskIdForAttachment, currentUserId);
+        if (success)
+        {
+            AttachMessage = "Document attached successfully.";
+            SelectedTaskIdForAttachment = 0;
+            SelectedDocumentIdForAttachment = 0;
+            AvailableDocuments.Clear();
+        }
+        else
+        {
+            AttachError = "Unable to attach document to task.";
+        }
     }
 
     private string GetPriorityColor(TaskPriority priority)
